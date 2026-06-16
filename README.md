@@ -1,4 +1,3 @@
-
 * * *
 
 ## SEP 暑研项目：车辆路径问题与扩展优化
@@ -13,18 +12,19 @@
 
 ```
 .
-├── data/                      # 数据集（CVRP / VRPTW 实例）
-│   ├── A-n32-k5/              # Augerat CVRP 实例
-│   └── solomon/               # Solomon VRPTW 实例
-├── docs/                      # 文档与笔记
-│   ├── 00_weekly.md           # 每周进度记录
-│   └── meeting_notes/         # 会议笔记（分周存放）
-├── notebooks/                 # Jupyter Notebook 探索性分析
-├── results/                   # 求解结果（文本 / 图表）
-├── src/                       # 源代码（Python 脚本）
-├── FURP_Showcase.pdf          # 项目展示海报
-├── .gitignore                 # Git 忽略规则
-└── README.md                  # 本文件
+├── .venv/ # Python 虚拟环境（本地开发，不提交到 Git）
+├── data/ # 数据集（CVRP / VRPTW 实例）
+│ ├── A-n32-k5/ # Augerat CVRP 实例
+│ └── solomon/ # Solomon VRPTW 实例
+├── docs/ # 文档与笔记
+│ ├── 00_weekly.md # 每周进度记录
+│ └── meeting_notes/ # 会议笔记（分周存放）
+├── notebooks/ # Jupyter Notebook 探索性分析
+├── results/ # 求解结果（文本 / 图表）
+├── src/ # 源代码（Python 脚本）
+├── FURP_Showcase.pdf # 项目展示海报
+├── .gitignore # Git 忽略规则
+└── README.md # 本文件
 ```
 
 ### 已完成工作
@@ -99,6 +99,7 @@ This project is part of the SEP summer research program, focusing on Capacitated
 
 ```
 .
+├── .venv/                     # Python virtual environment (local dev, not committed)
 ├── data/                      # Datasets (CVRP / VRPTW instances)
 │   ├── A-n32-k5/              # Augerat CVRP instance
 │   └── solomon/               # Solomon VRPTW instances

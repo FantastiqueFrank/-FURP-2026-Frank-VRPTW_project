@@ -8,8 +8,8 @@ from pyvrp.stop import MaxRuntime
 # 路径配置
 script_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(script_dir)
-vrp_file = os.path.join(project_root, "data", "A-n32-k5", "A-n32-k5.vrp")
-sol_file = os.path.join(project_root, "data", "A-n32-k5", "A-n32-k5.sol")
+vrp_file = os.path.join(project_root, "data", "A-n33-k5", "A-n33-k5.vrp")
+sol_file = os.path.join(project_root, "data", "A-n33-k5", "A-n33-k5.sol")
 
 instance = read(vrp_file, round_func="round")
 
