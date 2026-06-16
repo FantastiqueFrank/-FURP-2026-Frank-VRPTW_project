@@ -1,0 +1,20 @@
+# 虚拟环境
+.venv/
+venv/
+env/
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+
+# Jupyter notebook 检查点
+.ipynb_checkpoints/
+
+# IDE 配置
+.vscode/
+.idea/
+
+# 结果文件（可根据需要保留）
+# results/*.txt
+# results/*.png
