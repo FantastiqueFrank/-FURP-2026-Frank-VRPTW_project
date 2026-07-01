@@ -128,8 +128,8 @@ def plot_solution(nodes, manager, routing, solution, num_vehicles):
 # ==================== 主函数 ====================
 def main():
     # 文件路径（请根据实际位置修改）
-    node_file = r"D:\Projects\-FURP-2026-Frank-VRPTW_project-main\data\ESOGU-EVRP-PD-TW DATASET\ESOGU Dataset-EVRP_PD_TW1\ESOGU_C5_TW1.txt"
-    dist_file = r"D:\Projects\-FURP-2026-Frank-VRPTW_project-main\data\ESOGU-EVRP-PD-TW DATASET\V3.2_DistanceMatrix_SUIT_PDP_TW1\Distance_ESOGU_C5_TW1.txt"
+    node_file = r"D:\Projects\-FURP-2026-Frank-VRPTW_project-main\data\ESOGU-EVRP-PD-TW DATASET\ESOGU Dataset-EVRP_PD_TW1\ESOGU_C60_TW1.txt"
+    dist_file = r"D:\Projects\-FURP-2026-Frank-VRPTW_project-main\data\ESOGU-EVRP-PD-TW DATASET\V3.2_DistanceMatrix_SUIT_PDP_TW1\Distance_ESOGU_C60_TW1.txt"
 
     nodes = read_esogu_data(node_file)
     n = len(nodes)
@@ -141,8 +141,8 @@ def main():
     print(f"成功读取 {len(distance_matrix)}×{len(distance_matrix[0])} 距离矩阵")
 
     # ========== EVRP-TW 电池参数（可调整） ==========
-    BATTERY_CAPACITY = 400  # kWh（设置很大，使约束不紧）
-    CONSUMPTION_RATE = 0.1  # kWh/km
+    BATTERY_CAPACITY = 921  # kWh（设置很大，使约束不紧）
+    CONSUMPTION_RATE = 0.2  # kWh/km
     # 速度转换系数（距离 → 时间，单位分钟）
     SPEED_MPS = 12.5  # 12.5 米/秒
     DIST_TO_TIME = 1 / (SPEED_MPS * 60)  # 距离(m) → 时间(min)
@@ -158,7 +158,7 @@ def main():
     print(f"客户数量: {len(customer_indices)}")
 
     vehicle_capacity = 350
-    num_vehicles = 4
+    num_vehicles = 10
 
     # ========== 构建模型 ==========
     manager = pywrapcp.RoutingIndexManager(n, num_vehicles, depot)
@@ -219,8 +219,8 @@ def main():
     time_callback_index = routing.RegisterTransitCallback(time_callback)
     routing.AddDimension(
         time_callback_index,
-        30,
-        5000,
+        1000,  # slack 足够大，允许大量等待
+        50000,  # max_time 足够大
         False,
         'Time'
     )
@@ -243,13 +243,12 @@ def main():
         to_node = safe_index_to_node(to_index)
         if from_node == -1 or to_node == -1:
             return 0
-        # 计算消耗
-        consumption = int(distance_matrix[from_node][to_node] * CONSUMPTION_RATE)
-        # 如果到达节点是充电站，消耗设为0（即不耗电，可视为充电但简化）
-        # 这样充电站实际上不增加电量，但也不消耗，因此不会影响可行性
+        # 对充电站不耗电（也不充电）
         if nodes[to_node]['type'] == 'cs':
             return 0
-        return consumption
+        # 普通弧消耗：距离(m) * 0.2 kWh/km = 距离 * 0.0002 kWh/m
+        consumption = distance_matrix[from_node][to_node] * CONSUMPTION_RATE  # float
+        return int(consumption + 0.5)  # 四舍五入取整
 
     energy_callback_index = routing.RegisterTransitCallback(energy_callback)
     routing.AddDimension(
@@ -264,14 +263,16 @@ def main():
     # ========== 求解 ==========
     print("\n尝试求解 EVRP-TW（带时间窗 + 电池约束）...")
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
+    # 1. 更有效的初始解策略（对时间窗问题更友好）
     search_parameters.first_solution_strategy = (
-        routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
+        routing_enums_pb2.FirstSolutionStrategy.PARALLEL_CHEAPEST_INSERTION
     )
+    # 2. 使用禁忌搜索（在复杂约束下通常效果更好）
     search_parameters.local_search_metaheuristic = (
-        routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
+        routing_enums_pb2.LocalSearchMetaheuristic.TABU_SEARCH
     )
-    search_parameters.time_limit.seconds = 60
-
+    # 3. 给求解器更多时间（5分钟）
+    search_parameters.time_limit.seconds = 300
     solution = routing.SolveWithParameters(search_parameters)
 
     if solution:
