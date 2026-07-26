@@ -17,4 +17,7 @@ __pycache__/
 
 # 结果文件（可根据需要保留）
 # results/*.txt
-# results/*.pngsrc/lightning_logs/
+# results/*.png
+
+# RL4CO 训练日志
+lightning_logs/
