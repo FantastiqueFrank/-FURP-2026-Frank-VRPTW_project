@@ -10,7 +10,7 @@ Vehicle routing problem is a classic problem in logistics and distribution. The 
 
 Started from the deport, the process is that vehicles try to serve all the customers then come back. And this article aims to optimize the routes so that the total driving distance would be minimized. This problem is a kind of NP-hard questions, Which means the complexity of the question would grow quickly while the number of customers increasing. So, the best solution might be quite hard to find in a reasonable time.
 
-In fact, the base question is not enough. In the real world, the vehicles have loading capacity and the question would be the Capacitated VRP (CVRP). The customers have a time require, which means the vehicle must arrive during a specific period, so it becomes the VRPTW. When electric vehicles are used, their battery capacity becomes another limit, and the vehicle may need to visit charging stations along the way, so the question finally becomes the EVRP-TW.
+In fact, the base question is not enough. In the real world, the vehicles have loading capacity and the question would be the Capacitated VRP (CVRP). The customers have a time require, which means the vehicle must arrive during a specific period, so it becomes the VRPTW. When electric vehicles are used, their battery capacity becomes another limit, and the vehicle may need to visit charging stations along the way, so the question finally becomes the EVRP-TW. A closely related problem, the capacitated EVRP (CEVRP), which keeps the battery and capacity constraints but drops the time windows, has been solved with both exact and metaheuristic methods [1]–[3].
 
 The table below shows these variants and the constraints that each of them adds.
 
@@ -140,6 +140,14 @@ In this experiment, OR-Tools is used to solve two EVRP-TW instances from the ESO
 | 921 (critical) | Yes | 30520 | Yes (2) |
 | 920 | No | - | - |
 
+The routes of the two instances are visualized below. Figure 1 shows the 20-customer instance without a battery constraint. Figure 2 and Figure 3 show the 60-customer instance without and with the critical battery capacity (921 kWh), respectively. The red star marks the depot, the blue circles are the customers, and the green squares are the charging stations.
+
+![Figure 1: EVRP-TW routes for ESOGU_C20_TW1 without a battery constraint](images/evrptw_c20_no_battery.png)
+
+![Figure 2: EVRP-TW routes for ESOGU_C60_TW1 without a battery constraint](images/evrptw_c60_no_battery.png)
+
+![Figure 3: EVRP-TW routes for ESOGU_C60_TW1 with a critical battery capacity of 921 kWh](images/evrptw_c60_battery921.png)
+
 From the tables, some interesting findings can be got. First, for the 20-customer dataset, the minimal capacity is 697 kWh, but the route at this value is exactly the same as the route without a battery. So the critical value here may come from a numerical issue of the solver, not from a real physical setting. Second, for the 60-customer instance, the minimal capacity is 921 kWh, and the route changes. The whole distance increases from 30142 to 30520, and the route now visits two charging stations. Third, the charging stations are not only used for charging. In the 60-customer dataset, even when the battery is very full, the vehicle still visits two stations. That means the stations may also be used as time checkpoints, because the vehicle can wait there to fit the time requires.
 
 ### 3.3 Experiment 3: POMO Baseline and the EVRP-TW Environment
@@ -168,7 +176,7 @@ From the first experiment, it can be seen that the choice of a solver matters. O
 
 ### 4.2 What the battery experiment tells
 
-The battery experiment has revealed an interesting finding that the battery factor does not always change the route. On the 20-customer instance, the constraint is too loose, that means the critical capacity is not necessary. On the 60-customer instance, the constraint starts to matter, and the route changes. This indicates that the instance and the parameters should be chosen carefully. If the environment settings is too loose, the limitations could not be reflected. If it is too tight, the problem becomes infeasible. The charging station also has another feature, which is easy to miss. In the current model, the stations do not really charge the vehicle, they just do not consume energy. That means a simplified model may underestimate the role of charging stations.
+The battery experiment has revealed an interesting finding that the battery factor does not always change the route. On the 20-customer instance, the constraint is too loose, that means the critical capacity is not necessary. On the 60-customer instance, the constraint starts to matter, and the route changes. This indicates that the instance and the parameters should be chosen carefully. If the environment settings is too loose, the limitations could not be reflected. If it is too tight, the problem becomes infeasible. The charging station also has another feature, which is easy to miss. In the current model, the stations do not really charge the vehicle, they just do not consume energy. That means a simplified model may underestimate the role of charging stations [1], [2].
 
 ### 4.3 Limitations of this project
 
@@ -176,7 +184,7 @@ There are some limitations that should be mentioned. First, only two CVRP instan
 
 ### 4.4 Is the learning-based method worth it?
 
-The answer of this question is still open on the current stage of the research. The advantage of POMO is that, once the model is trained, the inference is very fast, and the model can solve new instances without rebuilding the model. This is different from the traditional solvers, which need to run the search again for every new instance. However, POMO also has some drawbacks. For example, the training is expensive. In addition, the quality of the solution is not guaranteed. In the previous research stage, the biggest cost is the environment settings, because the framework does not support EVRP-TW natively. With the environment working normally, the next question is whether the trained model can produce feasible and competitive solutions. This question will be answered in the next stage.
+The answer of this question is still open on the current stage of the research. The advantage of POMO is that, once the model is trained, the inference is very fast, and the model can solve new instances without rebuilding the model. This is different from the traditional solvers, which need to run the search again for every new instance; recent metaheuristics keep pushing the state of the art on these problems [3]. However, POMO also has some drawbacks. For example, the training is expensive. In addition, the quality of the solution is not guaranteed. In the previous research stage, the biggest cost is the environment settings, because the framework does not support EVRP-TW natively. With the environment working normally, the next question is whether the trained model can produce feasible and competitive solutions. This question will be answered in the next stage.
 
 ---
 
@@ -185,3 +193,13 @@ The answer of this question is still open on the current stage of the research. 
 In this project, the exploration goes from the traditional solvers to the learning-based methods. *Firstly, it ran OR-Tools and PyVRP on CVRP baseline, and the essay has found that PyVRP reaches the known optimum on both instances, while OR-Tools shows a gap around 3.5% on the medium instance. Then, it used OR-Tools to study the EVRP-TW problem with the ESOGU dataset. The results have indicated battery limit changes the route only when the capacity is tight enough, and the charging stations can also work as time checkpoints. After that, it built a custom EVRP-TW environment for the POMO model, which supports hard constraint masking for capacity, battery and time windows. The environment is complete and the basic functions are tested, and the POMO training is the next step.
 
 For the future work, the plan is to do the following things. First, POMO will be trained on small EVRP-TW instances and compared with OR-Tools on the same instances. Second, the random instances will be replaced with the ESOGU data, so that the learning method is tested on the real problem. Third, the real charging behavior at the stations will be implemented, including the charging time and the energy that is restored. Fourth, the experiments will be scaled to more instances and more customers, so that the conclusions are more reliable. It is hoped that, in the end, the learning-based method can be a useful complement to the traditional solvers, providing a faster way to get good solutions when the problem becomes large.
+
+---
+
+## References
+
+[1] Y.-H. Jia, Y. Mei, and M. Zhang, "A bilevel ant colony optimization algorithm for capacitated electric vehicle routing problem," *IEEE Trans. Cybern.*, vol. 52, no. 10, pp. 10855–10868, 2022.
+
+[2] Y.-H. Jia, Y. Mei, and M. Zhang, "Confidence-based ant colony optimization for capacitated electric vehicle routing problem with comparison of different encoding schemes," *IEEE Trans. Evol. Comput.*, vol. 26, no. 6, pp. 1394–1408, 2022.
+
+[3] C.-T. Feng, Y.-H. Jia, Q. Yang, W.-N. Chen, and H. Jiang, "A bilevel hybrid genetic algorithm for capacitated electric vehicle routing problem," in *Proc. IEEE Congr. Evol. Comput. (CEC)*, 2024, doi: 10.1109/CEC60901.2024.10611987.
